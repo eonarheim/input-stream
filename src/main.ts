@@ -1,7 +1,6 @@
 import robotPNG from '../img/robot.png';
 import { Clock } from './clock';
 import { FpsSampler } from './fps-sampler';
-import { Keyboard } from './keyboard';
 import { Sprite } from './sprite';
 
 const canvas = document.createElement('canvas');
@@ -20,7 +19,6 @@ function clear(context: CanvasRenderingContext2D) {
     context.fillRect(0, 0, canvas.width, canvas.height);
 }
 
-let keyboard: Keyboard;
 let sprite: Sprite;
 let spriteX = 100;
 let spriteY = 100;
@@ -29,7 +27,6 @@ let oldSpriteY = 100;
 let spriteVelX = 100; // pixels/sec
 let spriteVelY = 0;
 function init(resources: { [key: string]: HTMLImageElement }) {
-    keyboard = new Keyboard();
 
     const { robotImg } = resources;
     const spriteIndex = 3;
@@ -43,7 +40,8 @@ function init(resources: { [key: string]: HTMLImageElement }) {
             width: spriteWidth,
             height: spriteHeight
         }
-    })
+    });
+
 }
 
 async function load() {
@@ -59,19 +57,8 @@ function update(elapsedMs: number) {
 
     spriteVelX = 0;
     spriteVelY = 0;
-    if (keyboard.isPressed('ArrowRight')) {
-        spriteVelX = 100;
-    }
-    if (keyboard.isPressed('ArrowLeft')) {
-        spriteVelX = -100;
-    }
-    if (keyboard.isPressed('ArrowUp')) {
-        spriteVelY = -100;
-    }
-    if (keyboard.isPressed('ArrowDown')) {
-        spriteVelY = 100;
-    }
-
+    
+    // TODO handle input
 
     oldSpriteX = spriteX;
     oldSpriteY = spriteY;
@@ -108,14 +95,14 @@ function draw(context: CanvasRenderingContext2D) {
     const newY = lerp(oldSpriteY, spriteY, blend);
 
     sprite.draw(context, newX, newY, 100, 100);
-    context.font = '40px sans-serif';
+
+    // FPS
+    context.font = '10px sans-serif';
     context.fillStyle = 'yellow';
-    context.fillText('Draw FPS:' + clock.fpsSampler.fps.toFixed(2), 10, 40);
-    context.font = '40px sans-serif';
+    context.fillText('Draw FPS:' + clock.fpsSampler.fps.toFixed(2), 10, 10);
+    context.font = '10px sans-serif';
     context.fillStyle = 'lime';
-    context.fillText('Update FPS:' + fpsSampler.fps.toFixed(2), 10, 80);
-
-
+    context.fillText('Update FPS:' + fpsSampler.fps.toFixed(2), 10, 20);
 }
 
 async function main(context: CanvasRenderingContext2D) {
