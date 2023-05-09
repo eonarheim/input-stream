@@ -1,6 +1,10 @@
 import robotPNG from '../img/robot.png';
 import { Clock } from './clock';
 import { FpsSampler } from './fps-sampler';
+import { Buttons, Gamepads } from './gamepad';
+import { InputMapper } from './input-mapper';
+import { Keyboard } from './keyboard';
+import { Pointers } from './pointers';
 import { Sprite } from './sprite';
 
 const canvas = document.createElement('canvas');
@@ -19,6 +23,11 @@ function clear(context: CanvasRenderingContext2D) {
     context.fillRect(0, 0, canvas.width, canvas.height);
 }
 
+let keyboard: Keyboard;
+let pointers: Pointers;
+let gamepads: Gamepads;
+let inputMapper: InputMapper;
+
 let sprite: Sprite;
 let spriteX = 100;
 let spriteY = 100;
@@ -27,6 +36,15 @@ let oldSpriteY = 100;
 let spriteVelX = 100; // pixels/sec
 let spriteVelY = 0;
 function init(resources: { [key: string]: HTMLImageElement }) {
+
+    keyboard = new Keyboard();
+    pointers = new Pointers(canvas);
+    gamepads = new Gamepads();
+    inputMapper = new InputMapper({
+        keyboard,
+        gamepads,
+        pointers
+    });
 
     const { robotImg } = resources;
     const spriteIndex = 3;
@@ -42,6 +60,25 @@ function init(resources: { [key: string]: HTMLImageElement }) {
         }
     });
 
+    const moveRight = (amount: number) => { spriteVelX = 100 * amount }
+    const moveLeft = (amount: number) => { spriteVelX = -100 * amount }
+    const moveUp = (amount: number) => { spriteVelY = -100 * amount }
+    const moveDown = (amount: number) => { spriteVelY = 100 * amount }
+
+    inputMapper.on(({keyboard}) => keyboard.isKeyPressed('ArrowRight') ? 1 : 0, moveRight);
+    inputMapper.on(({keyboard}) => keyboard.isKeyPressed('ArrowLeft') ? 1 : 0, moveLeft);
+    inputMapper.on(({keyboard}) => keyboard.isKeyPressed('ArrowUp') ? 1 : 0, moveUp);
+    inputMapper.on(({keyboard}) => keyboard.isKeyPressed('ArrowDown') ? 1 : 0, moveDown);
+
+    inputMapper.on(({gamepads}) => gamepads.get(0).isButtonPressed(Buttons.DpadRight) ? 1 : 0, moveRight);
+    inputMapper.on(({gamepads}) => gamepads.get(0).isButtonPressed(Buttons.DpadLeft) ? 1 : 0, moveLeft);
+    inputMapper.on(({gamepads}) => gamepads.get(0).isButtonPressed(Buttons.DpadUp) ? 1 : 0, moveUp);
+    inputMapper.on(({gamepads}) => gamepads.get(0).isButtonPressed(Buttons.DpadDown) ? 1 : 0, moveDown);
+
+    inputMapper.on(({gamepads}) => gamepads.get(0).getLeftStick()[0] > 0 ? gamepads.get(0).getLeftStick()[0] : 0, moveRight);
+    inputMapper.on(({gamepads}) => gamepads.get(0).getLeftStick()[0] < 0 ? Math.abs(gamepads.get(0).getLeftStick()[0]) : 0, moveLeft);
+    inputMapper.on(({gamepads}) => gamepads.get(0).getLeftStick()[1] > 0 ? gamepads.get(0).getLeftStick()[1] : 0, moveDown);
+    inputMapper.on(({gamepads}) => gamepads.get(0).getLeftStick()[1] < 0 ? Math.abs(gamepads.get(0).getLeftStick()[1]) : 0, moveUp);
 }
 
 async function load() {
@@ -54,18 +91,21 @@ async function load() {
 // Update the game every frame
 function update(elapsedMs: number) {
     const seconds = elapsedMs / 1000;
+    gamepads.update();
 
     spriteVelX = 0;
     spriteVelY = 0;
-    
-    // TODO handle input
 
+    inputMapper.execute();
+   
     oldSpriteX = spriteX;
     oldSpriteY = spriteY;
 
     // basic euler integration
     spriteX += spriteVelX * seconds;
     spriteY += spriteVelY * seconds;
+
+    keyboard.clear();
 }
 let fpsSampler = new FpsSampler({
     initialFps: 60,

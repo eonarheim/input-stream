@@ -1,3 +1,4 @@
+
 /**
  * Gamepad Buttons enumeration
  */
@@ -66,12 +67,12 @@ export enum Buttons {
      * D-pad right
      */
     DpadRight = 15
-  }
-  
-  /**
-   * Gamepad Axes enumeration
-   */
-  export enum Axes {
+}
+
+/**
+ * Gamepad Axes enumeration
+ */
+export enum Axes {
     /**
      * Left analogue stick X direction
      */
@@ -88,13 +89,22 @@ export enum Buttons {
      * Right analogue stick Y direction
      */
     RightStickY = 3
-  }
+}
 
 export class Gamepads {
-    public gamepads: Map<number, Gamepad> = new Map<number, Gamepad>();
-    
+    public gamepads = new Map<number, Gamepad>();
     constructor() {
-        this.init();
+        window.addEventListener('gamepadconnected', evt => {
+            const gamepad = evt.gamepad;
+            console.log("Connected", gamepad);
+            this.gamepads.set(gamepad.index, new Gamepad(gamepad));
+        });
+
+        window.addEventListener('gamepaddisconnected', evt => {
+            const gamepad = evt.gamepad;
+            console.log('Disconnected', gamepad);
+            this.gamepads.delete(gamepad.index);
+        });
     }
 
     public get(index: number): Gamepad {
@@ -103,27 +113,13 @@ export class Gamepads {
         }
         return this.gamepads.get(index) as Gamepad;
     }
-    
-    public init() {
-        window.addEventListener('gamepadconnected', evt => {
-            const gamepad = evt.gamepad;
-            console.log("Connected!", gamepad);
-            this.gamepads.set(gamepad.index, new Gamepad(gamepad));
-        });
-        
-        window.addEventListener('gamepaddisconnected', evt => {
-            const gamepad = evt.gamepad;
-            console.log("Disconnected!", gamepad);
-            this.gamepads.delete(gamepad.index);
-        });
-    }
 
     public update() {
-        const gamepadSnapshot = navigator.getGamepads();
-        for (const [index] of this.gamepads.entries()) {
-            const gamepad = gamepadSnapshot[index];
+        const gamepadsSnapshot = navigator.getGamepads();
+        for (const [index, gamepad] of this.gamepads.entries()) {
+            const gamepad = gamepadsSnapshot[index];
             if (gamepad) {
-                this.gamepads.get(index)?.update(gamepad);
+                this.gamepads.set(index, new Gamepad(gamepad));
             }
         }
     }
@@ -143,20 +139,16 @@ export class Gamepad {
         })
     }
 
-    /**
-     * The minimum value an axis has to move before considering it a change
-     */
-    public static MinAxisMoveThreshold = 0.05;
-    constructor(public nativeGamepad: globalThis.Gamepad) {}
 
-    update(nativeGamepad: globalThis.Gamepad) {
-        this.nativeGamepad = nativeGamepad;
+    constructor(public nativeGamepad: globalThis.Gamepad) {
+
     }
 
-    isPressed(button: Buttons): boolean {
+    isButtonPressed(button: Buttons) {
         return this.nativeGamepad.buttons[button]?.pressed ?? false;
     }
-    isPressedValue(button: Buttons): number {
+
+    getButtonValue(button: Buttons) { 
         return this.nativeGamepad.buttons[button]?.value ?? 0;
     }
 
@@ -165,18 +157,17 @@ export class Gamepad {
         const y = this.nativeGamepad.axes[Axes.LeftStickY] ?? 0;
 
         return [
-            Math.abs(x) > Gamepad.MinAxisMoveThreshold ? x : 0,
-            Math.abs(y) > Gamepad.MinAxisMoveThreshold ? y : 0
+            Math.abs(x) > .05 ? x : 0,
+            Math.abs(y) > .05 ? y : 0,
         ]
     }
-
     getRightStick(): [number, number] {
         const x = this.nativeGamepad.axes[Axes.RightStickX] ?? 0;
         const y = this.nativeGamepad.axes[Axes.RightStickY] ?? 0;
 
         return [
-            Math.abs(x) > Gamepad.MinAxisMoveThreshold ? x : 0,
-            Math.abs(y) > Gamepad.MinAxisMoveThreshold ? y : 0
+            Math.abs(x) > .05 ? x : 0,
+            Math.abs(y) > .05 ? y : 0,
         ]
     }
 }

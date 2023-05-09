@@ -1,9 +1,11 @@
 import { Keyboard } from "./keyboard"
 import { Gamepads } from "./gamepad"
+import { Pointers } from "./pointers";
 
 export interface Inputs {
     keyboard: Keyboard;
     gamepads: Gamepads;
+    pointers: Pointers;
 }
 
 export class InputMapper {

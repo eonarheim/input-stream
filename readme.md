@@ -1,12 +1,11 @@
-## Mainloop Stream Code
+## Input Stream Code
 
 This code is from a live stream where we talk about
 
-* Building a basic mainloop
-* Adding Time based movement
-* Limiting FPS
-* Implementing Fixed Update FPS
-* Frame Interpolation
+* Keyboard
+* Pointer
+* Gamepad
+* Input mapping
 
 ### Prerequisites 
 
